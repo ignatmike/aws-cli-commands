@@ -1,0 +1,45 @@
+# Aws cli configuration
+
+
+aws s3api create-bucket --bucket ignatov-test --region eu-north-1 --create-bucket-configuration LocationConstraint=eu-north-1
+----------------------------------------------------------
+|                      CreateBucket                      |
++----------+---------------------------------------------+
+|  Location|  http://ignatov-test.s3.amazonaws.com/   |
++----------+---------------------------------------------+
+
+
+# Копіюємо вміст папки в якій ми є з нашого пк у s3 Bucket
+
+aws s3 cp . s3://ignatov-test/ --recursive
+
+# робимо усі файли в нашому s3 Bucket публічними
+
+aws s3 sync s3://ignatov-test s3://ignatov-test --acl public-read
+
+# розблоковуємо публічний доступ до s3 Bucket
+
+aws s3api put-public-access-block --bucket ignatov-test --public-access-block-configuration "BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false"
+
+# створюємо файл політики pub_acc_policy.json
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "PublicReadGetObject",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::ignatov-test/*"
+        }
+    ]
+}
+
+# добавляємо цей файл до s3 Bucket
+
+aws s3api put-bucket-policy --bucket ignatov-test --policy file://pub_acc_policy.json
+
+# Доступ надано
+
+https://ignatov-test.s3.amazonaws.com/index.html
